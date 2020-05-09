@@ -3,7 +3,7 @@ package com.graknmythos.server.model.export
 /**
  * Represents a graph node.
  *
- * @version 0.2.0
+ * @version 0.2.1
  * @since 0.1.0
  * @author [Brandon Fergerson](mailto:bfergerson@apache.org)
  */

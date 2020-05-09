@@ -50,8 +50,8 @@ cd grakn-core-all-linux-1.7.1
 
 ##### Deploy Application
 ```sh
-curl -L -O https://github.com/BFergerson/grakn-mythos/releases/download/v0.2.0/mythos-server-v0.2.0.tar
-tar -xvf mythos-server-v0.2.0.tar
+curl -L -O https://github.com/BFergerson/grakn-mythos/releases/download/v0.2.1/mythos-server-v0.2.1.tar
+tar -xvf mythos-server-v0.2.1.tar
 cd mythos-server/bin
 ./mythos-server
 ```

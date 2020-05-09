@@ -7,7 +7,7 @@ import com.graknmythos.server.model.export.Node
 /**
  * Used to modify the query used on Grakn and the resulting [Graph].
  *
- * @version 0.2.0
+ * @version 0.2.1
  * @since 0.1.0
  * @author [Brandon Fergerson](mailto:bfergerson@apache.org)
  */
