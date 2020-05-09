@@ -10,6 +10,7 @@ import grakn.client.answer.ConceptMap
 import grakn.client.concept.thing.impl.AttributeImpl
 import grakn.client.concept.thing.impl.EntityImpl
 import grakn.client.concept.thing.impl.RelationImpl
+import graql.lang.Graql
 import graql.lang.Graql.parseList
 import graql.lang.pattern.Disjunction
 import graql.lang.pattern.Pattern
@@ -27,6 +28,7 @@ import kotlinx.coroutines.launch
 import org.joor.Reflect
 import org.slf4j.LoggerFactory
 import java.util.*
+import java.util.stream.Stream
 
 /**
  * Converts Grakn query to [Graph].
@@ -59,9 +61,8 @@ class LegendConverter(private val usingTemporaryKeyspaces: Boolean, private val 
         var tx = session.transaction().write()
 
         log.info("Executing query: " + query.replace("\n", " "))
-        var varRoles = HashMap<String, String>()
         try {
-            val results: MutableList<List<ConceptMap>> = arrayListOf()
+            val resultStreams: MutableList<Stream<ConceptMap>> = ArrayList()
             parseList<GraqlQuery>(query).forEach { graqlQuery ->
                 when (graqlQuery) {
                     is GraqlDefine -> {
@@ -73,7 +74,7 @@ class LegendConverter(private val usingTemporaryKeyspaces: Boolean, private val 
                     is GraqlGet -> {
                         val varMap = HashMap<Variable, Variable>()
                         graqlQuery.match().patterns.patterns.forEach { statement ->
-                            replacePatternVars(options, varMap, varRoles, statement)
+                            replacePatternVars(options, varMap, statement)
                         }
                         val getVars = HashSet(graqlQuery.vars())
                         getVars.removeAll(graqlQuery.match().patterns.variables())
@@ -85,7 +86,7 @@ class LegendConverter(private val usingTemporaryKeyspaces: Boolean, private val 
                         }
 
                         log.info("Executing Graql query")
-                        results += tx.execute(graqlQuery)
+                        resultStreams.add(tx.stream(graqlQuery))
                     }
                     is GraqlGet.Group -> {
                         log.info("Executing Graql group")
@@ -108,10 +109,10 @@ class LegendConverter(private val usingTemporaryKeyspaces: Boolean, private val 
             }
 
             log.info("Parsing query result(s)")
-            val indexMap = HashMap<String, Int>()
             val nodes = ArrayList<Node>()
             val edges = HashSet<Any>()
-            results.forEach {
+            resultStreams.forEach {
+                val indexMap = HashMap<String, Int>()
                 it.forEach {
                     val varMap = HashMap<String, String>()
                     val hyperRelationVarSet = HashSet<String>()
@@ -351,26 +352,27 @@ class LegendConverter(private val usingTemporaryKeyspaces: Boolean, private val 
         }
     }
 
-    private fun replacePatternVars(options: QueryOptions, varMap: HashMap<Variable, Variable>,
-                                   varRoles: HashMap<String, String>, pattern: Pattern) {
+    private fun replacePatternVars(options: QueryOptions, varMap: HashMap<Variable, Variable>, pattern: Pattern) {
         if (pattern is StatementThing) {
             val v = pattern.`var`()
             pattern.properties().forEach {
                 if (it is HasAttributeProperty) {
                     if (it.attribute().variables().size > 1) {
-                        replacePatternVars(options, varMap, varRoles, it.attribute())
+                        replacePatternVars(options, varMap, it.attribute())
                     } else {
                         if (it.attribute().`var`().type() == Variable.Type.NAMED || options.includeAnonymousVariables) {
+                            val copyHas = Graql.`var`().has(it.type(), it.attribute()).properties().first()
                             val replaceVar = Variable("mythos_internal_" + v.name() + "_attribute_" + it.attribute().`var`().name())
                             varMap[Variable(it.attribute().`var`().name())] = replaceVar
                             Reflect.on(it.attribute()).set("var", replaceVar)
+                            pattern.properties().add(copyHas)
                         }
                     }
                 }
             }
         } else if (pattern is Disjunction<*>) {
             pattern.patterns.forEach {
-                replacePatternVars(options, varMap, varRoles, it)
+                replacePatternVars(options, varMap, it)
             }
         } else if (pattern is StatementRelation) {
             var replaceVarName = ""
