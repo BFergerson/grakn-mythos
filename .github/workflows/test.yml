@@ -1,0 +1,16 @@
+name: grakn-mythos Test
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - run: sudo apt install openjdk-8-jdk -y && sudo apt install npm -y
+    - run: ./gradlew clean build test
