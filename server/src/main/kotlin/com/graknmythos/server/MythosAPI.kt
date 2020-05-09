@@ -32,7 +32,6 @@ import java.time.ZonedDateTime
  */
 fun Route.apiRouting(mythosInternal: MythosInternal, client: GraknClient) {
     val log = LoggerFactory.getLogger("MythosAPI")
-    val legendConverter = LegendConverter(mythosInternal.useTempLegendKeyspaces, mythosInternal.legendKeyspace, client)
 
     get("/api/legend/{legendId}") {
         val date: ZonedDateTime = ZonedDateTime.of(2020, 1, 1, 0, 0, 0, 0, ZoneId.of("Z"))
@@ -81,6 +80,7 @@ fun Route.apiRouting(mythosInternal: MythosInternal, client: GraknClient) {
                 call.response.status(HttpStatusCode.NotFound)
                 log.info("Failed to find legend graph: $legendId")
             } else {
+                val legendConverter = LegendConverter(mythosInternal.useTempLegendKeyspaces, mythosInternal.legendKeyspace, client)
                 val result = legendConverter.convert(legend)
                 call.respondText(Gson().toJson(result), ContentType.Application.Json)
                 log.info("Sent legend graph: $legendId")
@@ -96,6 +96,7 @@ fun Route.apiRouting(mythosInternal: MythosInternal, client: GraknClient) {
             log.info("Executing legend")
             val text: String = call.receiveText()
             val request = Gson().fromJson(text, ExecuteLegendRequest::class.java)
+            val legendConverter = LegendConverter(mythosInternal.useTempLegendKeyspaces, mythosInternal.legendKeyspace, client)
             val result = legendConverter.convert(request.query, request.queryOptions)
             call.respondText(Gson().toJson(result), ContentType.Application.Json)
             log.info("Executed legend")
@@ -112,6 +113,7 @@ fun Route.apiRouting(mythosInternal: MythosInternal, client: GraknClient) {
 
             val text: String = call.receiveText()
             val request = Gson().fromJson(text, SaveLegendRequest::class.java)
+            val legendConverter = LegendConverter(mythosInternal.useTempLegendKeyspaces, mythosInternal.legendKeyspace, client)
             legendConverter.convert(request.query, request.queryOptions) //execute again to ensure validity before saving
             mythosInternal.saveLegend(legendId, request.description, request.query, request.image, request.queryOptions)
             call.respondText(Gson().toJson(SaveLegendResponse(legendId)), ContentType.Application.Json)

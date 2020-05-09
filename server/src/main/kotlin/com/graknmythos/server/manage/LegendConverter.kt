@@ -332,14 +332,16 @@ class LegendConverter(private val usingTemporaryKeyspaces: Boolean, private val 
             cache[query + "options-" + options.toString()] = Graph(nodes, edges.toList())
             return cache[query + "options-" + options.toString()]!!
         } finally {
-            tx.commit()
-
-            if (usingTemporaryKeyspaces) {
-                GlobalScope.launch {
-                    deleteTemporaryKeyspace(session)
+            try {
+                tx.commit()
+            } finally {
+                if (usingTemporaryKeyspaces) {
+                    GlobalScope.launch {
+                        deleteTemporaryKeyspace(session)
+                    }
+                } else {
+                    session.close()
                 }
-            } else {
-                session.close()
             }
         }
     }
