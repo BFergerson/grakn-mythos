@@ -11,7 +11,7 @@
   "devDependencies": {
     "css-loader": "^3.5.3",
     "file-loader": "^6.0.0",
-    "mocha": "^6.2.0",
+    "mocha": "^7.1.2",
     "monaco-editor": "^0.20.0",
     "style-loader": "^1.2.1",
     "typescript": "^3.8.3",
