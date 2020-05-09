@@ -41,7 +41,7 @@ import java.util.*
 class LegendConverter(private val usingTemporaryKeyspaces: Boolean, private val keyspace: String,
                       private val client: GraknClient) {
     companion object {
-        val cache = HashMap<String, Graph>() //todo: cache with REST api (using cache headers + optional redis)
+        val cache = HashMap<String, Graph>() //todo: optional redis
 
         @JvmStatic
         private val log = LoggerFactory.getLogger(javaClass.enclosingClass)
