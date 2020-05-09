@@ -1,0 +1,17 @@
+define
+man sub entity, has name, has age, has birth, has citizen;
+name sub attribute, datatype string;
+age sub attribute, datatype long;
+birth sub attribute, datatype date;
+citizen sub attribute, datatype boolean;
+
+insert
+$m isa man,
+    has name "Brandon",
+    has age 99,
+    has birth 2020-02-02,
+    has citizen true;
+
+match
+$m isa man, has name $n, has age $a, has birth $b, has citizen $c;
+get;

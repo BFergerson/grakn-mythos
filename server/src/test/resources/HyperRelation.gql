@@ -1,0 +1,39 @@
+define
+name sub attribute, datatype string;
+
+city sub entity,
+    has name,
+    plays is_city;
+husband sub entity,
+    has name,
+    plays is_husband;
+wife sub entity,
+    has name,
+    plays is_wife;
+
+marriage sub relation,
+    relates is_husband,
+    relates is_wife,
+    plays is_marriage;
+marriage-located sub relation,
+    relates is_city,
+    relates is_marriage;
+
+insert
+$c isa city, has name "Denver";
+$h isa husband, has name "John";
+$w isa wife, has name "Vanessa";
+$m (is_husband: $h, is_wife: $w)
+    isa marriage;
+(is_city: $c, is_marriage: $m)
+    isa marriage-located;
+
+match
+$c isa city, has name $cn;
+$h isa husband, has name $hn;
+$w isa wife, has name $wn;
+$m (is_husband: $h, is_wife: $w)
+    isa marriage;
+$ml (is_city: $c, is_marriage: $m)
+    isa marriage-located;
+get;

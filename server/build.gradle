@@ -10,7 +10,8 @@ buildscript {
 
 plugins {
     id 'org.jetbrains.kotlin.jvm' version '1.3.72'
-    id 'org.jetbrains.dokka'version '0.10.0'
+    id 'org.jetbrains.dokka' version '0.10.0'
+    id "com.avast.gradle.docker-compose" version "0.6.6"
 }
 
 apply plugin: 'application'
@@ -86,3 +87,14 @@ applicationDistribution.from("../client/src/main/javascript") {
 distTar.dependsOn(":client:compileTypeScriptAndPack")
 distZip.dependsOn(":client:compileTypeScriptAndPack")
 installDist.dependsOn(":client:compileTypeScriptAndPack")
+
+test {
+    dependsOn "composeUp"
+    finalizedBy "composeDown"
+}
+
+dockerCompose {
+    useComposeFiles = ['./docker-compose.yml']
+    dockerComposeWorkingDirectory = './docker/'
+    captureContainersOutput = true
+}

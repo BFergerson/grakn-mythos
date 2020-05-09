@@ -357,7 +357,7 @@ class LegendConverter(private val usingTemporaryKeyspaces: Boolean, private val 
     private fun replacePatternVars(options: QueryOptions, varMap: HashMap<Variable, Variable>, pattern: Pattern) {
         if (pattern is StatementThing) {
             val v = pattern.`var`()
-            pattern.properties().forEach {
+            HashSet(pattern.properties()).forEach {
                 if (it is HasAttributeProperty) {
                     if (it.attribute().variables().size > 1) {
                         replacePatternVars(options, varMap, it.attribute())
