@@ -1,0 +1,11 @@
+define
+legend sub entity,
+    key legend_id,
+    has legend_description,
+    has legend_query,
+    has legend_query_options;
+
+legend_id sub attribute, datatype string;
+legend_description sub attribute, datatype string;
+legend_query sub attribute, datatype string;
+legend_query_options sub attribute, datatype string;

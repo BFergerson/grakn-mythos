@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title id="title">Grakn Mythos</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, shrink-to-fit=no"
+          name="viewport">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+          integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"
+            crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+            integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+            crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+            integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+            crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="/css/legend-style.css">
+    <script>
+        var currentLocation = window.location.pathname.split('/');
+        var legendGraphEnabled = true;
+        var legendId = currentLocation[currentLocation.length - 1];
+        var legendQuery = "";
+        var legendReadOnly = true;
+        var chart;
+    </script>
+</head>
+<body class="bg-light">
+<nav class="navbar navbar-expand-lg fixed-top navbar-dark bg-dark"
+     style="background-image: url('/assets/background.png') !important;">
+    <div class="navbar-brand mr-auto mr-lg-0">
+        <a href="/" style="text-decoration: none">
+            <img src="/assets/grakn-mythos.svg"
+                 style="width:35.6667px;height:33.3px;margin-top: -28px;margin-bottom: -25px;"/>
+        </a>
+        <span style="font-size: small">
+            <span style="color: #7a68e8">[</span>
+            <span id="grakn_mythos_version" style="color: white;">v0.0.0</span>
+            <span style="color: #7a68e8">/</span>
+            <span style="color: white;">Grakn: v1.7.1</span>
+            <span style="color: #7a68e8">]</span>
+        </span>
+    </div>
+    <button class="navbar-toggler p-0 border-0" type="button" data-toggle="offcanvas">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="navbar-collapse offcanvas-collapse" id="navbarsExampleDefault">
+        <div class="collapse navbar-collapse justify-content-md-center" id="navbarsExample08">
+            <a href="/">
+                <img src="/assets/grakn-mythos-text.svg" style="height: 30px; width: 175px"/>
+            </a>
+        </div>
+        <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+                <a class="nav-link" href="/legend/create"><i class="fa fa-plus"></i> New Legend</a>
+            </li>
+            <li class="nav-item dropdown">
+                <a class="nav-link disabled dropdown-toggle" id="dropdown01" data-toggle="dropdown"
+                   aria-haspopup="true" aria-expanded="false">Settings</a>
+                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdown01">
+                    <form class="px-4 py-3">
+                        <div class="form-check">
+                            <input id="include_anonymous_variables" type="checkbox" class="form-check-input">
+                            <label class="form-check-label" for="include_anonymous_variables">
+                                Include anonymous variables
+                            </label>
+                        </div>
+                    </form>
+                </div>
+            </li>
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" id="about-dropdown" data-toggle="dropdown"
+                   aria-haspopup="true" aria-expanded="false">About</a>
+                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="about-dropdown">
+                    <a class="dropdown-item" href="https://github.com/bfergerson/grakn-mythos">
+                        <i class="fa fa-github" style="color: #7a68e8; margin-right: 5px"></i>
+                        Source Code
+                    </a>
+                    <a class="dropdown-item" href="https://github.com/bfergerson/grakn-mythos/issues">
+                        <i class="fa fa-bug" style="color: #7a68e8; margin-right: 5px"></i>
+                        Report Bug
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <div class="text-center">
+                        Copyright © 2020
+                    </div>
+                </div>
+            </li>
+        </ul>
+    </div>
+</nav>
+<script src="/js/info.bundle.js"></script>
+
+<div class="nav-scroller bg-white shadow-sm">
+    <nav class="nav nav-underline">
+        <div class="mr-auto align-center" style="width: 100%">
+            <ol class="breadcrumb" style="font-weight: bold; background-color: white; color: black">
+                <li id="legend_description" class="breadcrumb-item"></li>
+            </ol>
+        </div>
+        <div class="ml-auto">
+            <a id="clone_legend" style="text-decoration: none">
+                <button class="btn execute-button" style="color: #7a68e8; border-color: #7a68e8;">
+                    <i class="fa fa-clone"></i> Clone
+                </button>
+            </a>
+            <a id="full_screen_link">
+                <button class="btn execute-button" style="color: #7a68e8; border-color: #7a68e8; margin-right: 4px">
+                    <i class="fa fa-arrows"></i> Full Screen
+                </button>
+            </a>
+        </div>
+    </nav>
+</div>
+
+<div class="container-fluid cover-container text-center d-flex flex-column">
+    <div class="row bg-light align-items-center justify-content-center flex-fill" style="height: 100%;">
+        <div class="col-12" style="padding-left: 0; padding-right: 0; height: 100%;">
+            <main style="height: 100%;">
+                <!-- Main -->
+                <div class="d-md-flex h-md-100" style="height: 100%;">
+                    <div class="col-md-7 p-0 h-md-100 order-last"
+                         style="background-image: url('/assets/background.png')">
+                        <div id="main" style="min-height: 400px; min-width: 300px; height: 100%;"
+                             class="d-md-flex align-items-center h-md-100 justify-content-center">
+                        </div>
+                    </div>
+                    <div class="col-md-5 p-0 h-md-100">
+                        <div id="container"
+                             style="text-align: left; min-height: 400px; min-width: 300px; width: 100%; height: 99%; overflow: hidden"></div>
+                    </div>
+                </div>
+                <!-- End Main -->
+            </main>
+        </div>
+    </div>
+</div>
+
+<script src="/js/app.bundle.js"></script>
+<script src="/js/editor.loader.bundle.js"></script>
+<script src="/js/grakn.editor.bundle.js"></script>
+
+<div id="invalid-query" class="modal fade">
+    <div class="modal-dialog modal-confirm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div style="width:100%;text-align:center" class="small-4 medium-4 large-4 columns">
+                    <div class="icon-box">
+                        <i class="fa fa-exclamation-circle" style="color: #7a68e8"></i>
+                    </div>
+                </div>
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            </div>
+            <div class="modal-body text-center">
+                <h4>Invalid Query</h4>
+                <p id="invalid-query-text"></p>
+                <button class="btn btn-success" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="missing-legend" class="modal fade">
+    <div class="modal-dialog modal-confirm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div style="width:100%;text-align:center" class="small-4 medium-4 large-4 columns">
+                    <div class="icon-box">
+                        <i class="fa fa-exclamation-circle" style="color: #7a68e8"></i>
+                    </div>
+                </div>
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            </div>
+            <div class="modal-body text-center">
+                <h4>Legend Not Found</h4>
+                <p id="missing-legend-text">The requested legend does not exist</p>
+                <button class="btn btn-success" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    document.getElementById('clone_legend').href = "/legend/" + legendId + "/clone"
+    document.getElementById('full_screen_link').href = "/legend/" + legendId + "/full-screen"
+</script>
+</body>
+</html>

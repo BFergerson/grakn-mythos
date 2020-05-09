@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>New Legend - Grakn Mythos</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, shrink-to-fit=no"
+          name="viewport">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+          integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"
+            crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+            integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+            crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+            integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+            crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="/css/legend-style.css">
+    <script>
+        var legendGraphEnabled = false;
+        var legendQuery = "";
+        var legendReadOnly = false;
+        var chart;
+        var clonedLegend = null;
+    </script>
+</head>
+<body class="bg-light">
+<nav class="navbar navbar-expand-lg fixed-top navbar-dark bg-dark"
+     style="background-image: url('/assets/background.png') !important;">
+    <div class="navbar-brand mr-auto mr-lg-0">
+        <a href="/" style="text-decoration: none">
+            <img src="/assets/grakn-mythos.svg"
+                 style="width:35.6667px;height:33.3px;margin-top: -28px;margin-bottom: -25px;"/>
+        </a>
+        <span style="font-size: small">
+            <span style="color: #7a68e8">[</span>
+            <span id="grakn_mythos_version" style="color: white;">v0.0.0</span>
+            <span style="color: #7a68e8">/</span>
+            <span style="color: white;">Grakn: v1.7.1</span>
+            <span style="color: #7a68e8">]</span>
+        </span>
+    </div>
+    <button class="navbar-toggler p-0 border-0" type="button" data-toggle="offcanvas">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="navbar-collapse offcanvas-collapse" id="navbarsExampleDefault">
+        <div class="collapse navbar-collapse justify-content-md-center" id="navbarsExample08">
+            <a href="/">
+                <img src="/assets/grakn-mythos-text.svg" style="height: 30px; width: 175px"/>
+            </a>
+        </div>
+        <ul class="navbar-nav ml-auto">
+            <li class="nav-item disabled">
+                <a class="nav-link disabled"><i class="fa fa-plus"></i> New Legend</a>
+            </li>
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" id="dropdown01" data-toggle="dropdown"
+                   aria-haspopup="true" aria-expanded="false">Settings</a>
+                <ul class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
+                    <li class="dropdown-submenu dropdown-menu-right">
+                        <a class="dropdown-item dropdown-toggle" href="#">Query Options</a>
+                        <ul class="dropdown-menu dropdown-menu-right">
+                            <li>
+                                <form class="px-4 py-3">
+                                    <div class="form-check">
+                                        <input id="include_anonymous_variables" type="checkbox"
+                                               class="form-check-input">
+                                        <label class="form-check-label" for="include_anonymous_variables">
+                                            Include anonymous variables
+                                        </label>
+                                    </div>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="dropdown-submenu dropdown-menu-right">
+                        <a class="dropdown-item dropdown-toggle" href="#">Display Options</a>
+                        <ul class="dropdown-menu dropdown-menu-right">
+                            <li class="dropdown-submenu dropdown-menu-right">
+                                <a class="dropdown-item dropdown-toggle" href="#">Entity Naming</a>
+                                <ul class="dropdown-menu dropdown-menu-right">
+                                    <li style="margin-left: 20px">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="entityNaming"
+                                                   id="entity_naming_by_variable" value="by_variable" checked>
+                                            <label class="form-check-label" for="entity_naming_by_variable">
+                                                By Variable
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="entityNaming"
+                                                   id="entity_naming_by_type" value="by_type">
+                                            <label class="form-check-label" for="entity_naming_by_type">
+                                                By Type
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="entityNaming"
+                                                   id="entity_naming_by_id" value="by_id">
+                                            <label class="form-check-label" for="entity_naming_by_id">
+                                                By Id
+                                            </label>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li class="dropdown-submenu dropdown-menu-right">
+                                <a class="dropdown-item dropdown-toggle" href="#">Relation Naming</a>
+                                <ul class="dropdown-menu dropdown-menu-right">
+                                    <li style="margin-left: 20px">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="relationNaming"
+                                                   id="relation_naming_by_variable" value="by_variable" checked>
+                                            <label class="form-check-label" for="relation_naming_by_variable">
+                                                By Variable
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="relationNaming"
+                                                   id="relation_naming_by_type" value="by_type">
+                                            <label class="form-check-label" for="relation_naming_by_type">
+                                                By Type
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="relationNaming"
+                                                   id="relation_naming_by_id" value="by_id">
+                                            <label class="form-check-label" for="relation_naming_by_id">
+                                                By Id
+                                            </label>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li class="dropdown-submenu dropdown-menu-right">
+                                <a class="dropdown-item dropdown-toggle" href="#">Attribute Naming</a>
+                                <ul class="dropdown-menu dropdown-menu-right">
+                                    <li style="margin-left: 20px">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="attributeNaming"
+                                                   id="attribute_naming_by_value" value="by_value" checked>
+                                            <label class="form-check-label" for="attribute_naming_by_value">
+                                                By Value
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="attributeNaming"
+                                                   id="attribute_naming_by_id" value="by_id">
+                                            <label class="form-check-label" for="attribute_naming_by_id">
+                                                By Id
+                                            </label>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </li>
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" id="about-dropdown" data-toggle="dropdown"
+                   aria-haspopup="true" aria-expanded="false">About</a>
+                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="about-dropdown">
+                    <a class="dropdown-item" href="https://github.com/bfergerson/grakn-mythos">
+                        <i class="fa fa-github" style="color: #7a68e8; margin-right: 5px"></i>
+                        Source Code
+                    </a>
+                    <a class="dropdown-item" href="https://github.com/bfergerson/grakn-mythos/issues">
+                        <i class="fa fa-bug" style="color: #7a68e8; margin-right: 5px"></i>
+                        Report Bug
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <div class="text-center">
+                        Copyright © 2020
+                    </div>
+                </div>
+            </li>
+        </ul>
+    </div>
+</nav>
+<script src="/js/info.bundle.js"></script>
+
+<div class="nav-scroller bg-white shadow-sm">
+    <nav class="nav nav-underline">
+        <div class="mr-auto align-center" style="width: 100%">
+            <input id="legend_description" class="form-control" type="search" placeholder="Legend Description"
+                   autocomplete="off"
+                   aria-label="Legend Description"
+                   style="margin-top: 4px; border-color: gray">
+        </div>
+        <div class="ml-auto">
+            <button class="btn execute-button" onclick="window.executeLegend()"
+                    style="color: #7a68e8; border-color: #7a68e8;">
+                <span id="execute_spinner_icon" class="spinner-border spinner-border-sm" style="display: none"
+                      role="status" aria-hidden="true"></span>
+                <i id="execute_icon" class="fa fa-refresh"></i> Execute
+            </button>
+            <button id="save_button" class="btn execute-button disabled" disabled="disabled"
+                    onclick="window.saveLegend()"
+                    style="color: #7a68e8; border-color: #7a68e8; margin-right: 4px">
+                <span id="save_spinner_icon" class="spinner-border spinner-border-sm" style="display: none"
+                      role="status" aria-hidden="true"></span>
+                <i id="save_icon" class="fa fa-save"></i> Save
+            </button>
+        </div>
+    </nav>
+</div>
+
+<div class="container-fluid cover-container text-center d-flex flex-column">
+    <div class="row bg-light align-items-center justify-content-center flex-fill" style="height: 100%;">
+        <div class="col-12" style="padding-left: 0; padding-right: 0; height: 100%;">
+            <main style="height: 100%;">
+                <!-- Main -->
+                <div class="d-md-flex h-md-100" style="height: 100%;">
+                    <div class="col-md-7 p-0 h-md-100 order-last"
+                         style="background-image: url('/assets/background.png')">
+                        <div id="main" style="min-height: 400px; min-width: 300px; height: 100%;"
+                             class="d-md-flex align-items-center h-md-100 justify-content-center">
+                        </div>
+                    </div>
+                    <div class="col-md-5 p-0 h-md-100">
+                        <div id="container"
+                             style="text-align: left; min-height: 400px; min-width: 300px; width: 100%; height: 99%; overflow: hidden"></div>
+                    </div>
+                </div>
+                <!-- End Main -->
+            </main>
+        </div>
+    </div>
+</div>
+
+<script src="/js/app.bundle.js"></script>
+<script src="/js/editor.loader.bundle.js"></script>
+<script src="/js/grakn.editor.bundle.js"></script>
+
+<div id="missing-query" class="modal fade">
+    <div class="modal-dialog modal-confirm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div style="width:100%;text-align:center" class="small-4 medium-4 large-4 columns">
+                    <div class="icon-box">
+                        <i class="fa fa-exclamation-circle" style="color: #7a68e8"></i>
+                    </div>
+                </div>
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            </div>
+            <div class="modal-body text-center">
+                <h4>Missing Query</h4>
+                <p>Please provide a legend query</p>
+                <button class="btn btn-success" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="missing-description" class="modal fade">
+    <div class="modal-dialog modal-confirm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div style="width:100%;text-align:center" class="small-4 medium-4 large-4 columns">
+                    <div class="icon-box">
+                        <i class="fa fa-exclamation-circle" style="color: #7a68e8"></i>
+                    </div>
+                </div>
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            </div>
+            <div class="modal-body text-center">
+                <h4>Missing Description</h4>
+                <p>Please provide a legend description</p>
+                <button class="btn btn-success" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="invalid-query" class="modal fade">
+    <div class="modal-dialog modal-confirm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div style="width:100%;text-align:center" class="small-4 medium-4 large-4 columns">
+                    <div class="icon-box">
+                        <i class="fa fa-exclamation-circle" style="color: #7a68e8"></i>
+                    </div>
+                </div>
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            </div>
+            <div class="modal-body text-center">
+                <h4>Invalid Query</h4>
+                <p id="invalid-query-text"></p>
+                <button class="btn btn-success" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

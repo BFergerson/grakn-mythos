@@ -1,0 +1,6 @@
+group 'com.graknmythos'
+version '0.2.0'
+
+gradle.buildFinished {
+    project.buildDir.deleteDir()
+}

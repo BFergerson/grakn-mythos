@@ -1,0 +1,88 @@
+buildscript {
+    ext.kotlin_version = '1.3.72'
+    repositories { jcenter() }
+
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath "org.jetbrains.kotlin:kotlin-serialization:$kotlin_version"
+    }
+}
+
+plugins {
+    id 'org.jetbrains.kotlin.jvm' version '1.3.72'
+    id 'org.jetbrains.dokka'version '0.10.0'
+}
+
+apply plugin: 'application'
+apply plugin: 'kotlin'
+apply plugin: 'kotlinx-serialization'
+
+applicationName = 'mythos-server'
+mainClassName = 'com.graknmythos.server.ServerKt'
+
+repositories {
+    mavenCentral()
+    jcenter()
+    maven { url 'https://repo.grakn.ai/repository/maven/' }
+    maven { url "https://kotlin.bintray.com/kotlinx" }
+}
+
+ext.ktor_version = "1.3.0"
+
+dependencies {
+    compile("org.jetbrains.kotlinx:kotlinx-cli:0.2.1")
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.6'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+    compile("ch.qos.logback:logback-classic:1.2.3")
+    compile "io.ktor:ktor-server-core:$ktor_version"
+    compile "io.ktor:ktor-server-jetty:$ktor_version"
+    implementation "io.ktor:ktor-websockets:$ktor_version"
+    implementation 'com.google.code.gson:gson:2.8.5'
+    implementation 'org.jetbrains.kotlin:kotlin-test'
+    implementation 'org.jetbrains.kotlin:kotlin-test-junit'
+    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    compile "org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.11.1"
+    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.10'
+    compile group: 'org.apache.commons', name: 'commons-text', version: '1.8'
+    compile "org.jooq:joor-java-8:0.9.12"
+    compile "io.graql:graql-lang:1.0.6"
+    compile "io.grakn.client:grakn-client:1.7.2"
+}
+
+compileKotlin {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
+
+compileTestKotlin {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
+
+task runServer {
+    dependsOn allprojects.collect {
+        it.tasks.matching {
+            it.name == 'run'
+        }
+    }
+}
+run.dependsOn(":client:compileTypeScriptAndPack")
+
+applicationDistribution.from("../client/dist") {
+    into "client/dist"
+}
+applicationDistribution.from("../client/src/main/css") {
+    into "client/src/main/css"
+}
+applicationDistribution.from("../client/src/main/html") {
+    into "client/src/main/html"
+}
+applicationDistribution.from("../client/src/main/javascript") {
+    into "client/src/main/javascript"
+}
+
+distTar.dependsOn(":client:compileTypeScriptAndPack")
+distZip.dependsOn(":client:compileTypeScriptAndPack")
+installDist.dependsOn(":client:compileTypeScriptAndPack")
