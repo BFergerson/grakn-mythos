@@ -42,7 +42,7 @@ import java.time.ZonedDateTime
 /**
  * Primary entry point for the mythos server.
  *
- * @version 0.2.1
+ * @version 0.2.2
  * @since 0.1.0
  * @author [Brandon Fergerson](mailto:bfergerson@apache.org)
  */
