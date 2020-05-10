@@ -60,6 +60,22 @@ internal class LegendConverterTest {
     }
 
     @Test
+    fun basicRelationTest() {
+        val converter = LegendConverter(true, "mythos_test_" + System.currentTimeMillis(), client)
+        val result = converter.convert(Resources.getResource("BasicRelation.gql").readText(), QueryOptions())
+
+        assertEquals(2, result.nodes.size)
+        assertTrue(result.nodes.any { it.name == "\$m" && it.type == "entity" && it.category == "man" })
+        assertTrue(result.nodes.any { it.name == "\$c" && it.type == "entity" && it.category == "city" })
+
+        assertEquals(1, result.links.size)
+        (result.links as List<Edge>).find { it.name == "\$x" }.also {
+            assertEquals(result.nodes.indexOfFirst { it.name == "\$m" }, it!!.source)
+            assertEquals(result.nodes.indexOfFirst { it.name == "\$c" }, it.target)
+        }
+    }
+
+    @Test
     fun hyperRelationTest() {
         val converter = LegendConverter(true, "mythos_test_" + System.currentTimeMillis(), client)
         val result = converter.convert(Resources.getResource("HyperRelation.gql").readText(), QueryOptions())

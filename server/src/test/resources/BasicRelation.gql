@@ -1,0 +1,18 @@
+define
+man sub entity, plays is_man;
+city sub entity, plays at_city;
+
+lives-in sub relation,
+    relates is_man,
+    relates at_city;
+
+insert
+$m isa man;
+$c isa city;
+(is_man: $m, at_city: $c) isa lives-in;
+
+match
+$m isa man;
+$c isa city;
+$x ($m, $c);
+get;
