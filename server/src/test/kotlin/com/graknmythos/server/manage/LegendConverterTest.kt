@@ -60,6 +60,63 @@ internal class LegendConverterTest {
     }
 
     @Test
+    fun basicAttributesWithRestrictionTest() {
+        val converter = LegendConverter(true, "mythos_test_" + System.currentTimeMillis(), client)
+        val result = converter.convert(Resources.getResource("BasicAttributesWithRestriction.gql").readText(), QueryOptions())
+
+        assertEquals(5, result.nodes.size)
+        assertTrue(result.nodes.any { it.name == "99" && it.type == "attribute" && it.category == "age" })
+        assertTrue(result.nodes.any { it.name == "2020-02-02T00:00" && it.type == "attribute" && it.category == "birth" })
+        assertTrue(result.nodes.any { it.name == "true" && it.type == "attribute" && it.category == "citizen" })
+        assertTrue(result.nodes.any { it.name == "Brandon" && it.type == "attribute" && it.category == "name" })
+        assertTrue(result.nodes.any { it.name == "\$m" && it.type == "entity" && it.category == "man" })
+
+        assertEquals(4, result.links.size)
+        (result.links as List<Edge>).find { it.name == "\$a" }.also {
+            assertEquals(result.nodes.indexOfFirst { it.name == "\$m" }, it!!.source)
+            assertEquals(result.nodes.indexOfFirst { it.name == "99" }, it.target)
+        }
+        (result.links as List<Edge>).find { it.name == "\$b" }.also {
+            assertEquals(result.nodes.indexOfFirst { it.name == "\$m" }, it!!.source)
+            assertEquals(result.nodes.indexOfFirst { it.name == "2020-02-02T00:00" }, it.target)
+        }
+        (result.links as List<Edge>).find { it.name == "\$c" }.also {
+            assertEquals(result.nodes.indexOfFirst { it.name == "\$m" }, it!!.source)
+            assertEquals(result.nodes.indexOfFirst { it.name == "true" }, it.target)
+        }
+        (result.links as List<Edge>).find { it.name == "\$n" }.also {
+            assertEquals(result.nodes.indexOfFirst { it.name == "\$m" }, it!!.source)
+            assertEquals(result.nodes.indexOfFirst { it.name == "Brandon" }, it.target)
+        }
+    }
+
+    @Test
+    fun basicAnonymousVariableTest() {
+        //negative
+        var converter = LegendConverter(true, "mythos_test_" + System.currentTimeMillis(), client)
+        var result = converter.convert(Resources.getResource("BasicAnonymousVariable.gql").readText(), QueryOptions())
+
+        assertEquals(1, result.nodes.size)
+        assertTrue(result.nodes.any { it.name == "\$m" && it.type == "entity" && it.category == "man" })
+        assertEquals(0, result.links.size)
+
+        //positive
+        converter = LegendConverter(true, "mythos_test_" + System.currentTimeMillis(), client)
+        result = converter.convert(Resources.getResource("BasicAnonymousVariable.gql").readText(),
+                QueryOptions(includeAnonymousVariables = true))
+
+        assertEquals(2, result.nodes.size)
+        assertTrue(result.nodes.any { it.name == "\$m" && it.type == "entity" && it.category == "man" })
+        assertTrue(result.nodes.any { it.name == "Brandon" && it.type == "attribute" && it.category == "name" })
+
+        assertEquals(1, result.links.size)
+        (result.links as List<Edge>)[0].also {
+            assertEquals(result.nodes.indexOfFirst { it.name == "\$m" }, it.source)
+            assertEquals(result.nodes.indexOfFirst { it.name == "Brandon" }, it.target)
+        }
+    }
+
+    @Test
     fun basicRelationTest() {
         val converter = LegendConverter(true, "mythos_test_" + System.currentTimeMillis(), client)
         val result = converter.convert(Resources.getResource("BasicRelation.gql").readText(), QueryOptions())

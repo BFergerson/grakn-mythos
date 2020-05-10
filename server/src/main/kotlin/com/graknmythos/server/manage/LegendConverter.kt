@@ -259,7 +259,7 @@ class LegendConverter(private val usingTemporaryKeyspaces: Boolean, private val 
                                         val hyperRelationId = varMap[hyperRelationVar]!!
                                         val hyperRelationNodeName = when (options.displayOptions.relationNamingScheme) {
                                             RelationNamingScheme.BY_VARIABLE -> {
-                                                "$" + userHyperRelationName
+                                                "$$userHyperRelationName"
                                             }
                                             RelationNamingScheme.BY_TYPE -> {
                                                 hyperRelationType
@@ -286,7 +286,7 @@ class LegendConverter(private val usingTemporaryKeyspaces: Boolean, private val 
                                             val source = hyperPlayers[i]
                                             val hyperRelationPlayerName = when (options.displayOptions.relationNamingScheme) {
                                                 RelationNamingScheme.BY_VARIABLE -> {
-                                                    "$" + source
+                                                    "$$source"
                                                 }
                                                 RelationNamingScheme.BY_TYPE -> {
                                                     hyperRelationType
@@ -368,12 +368,13 @@ class LegendConverter(private val usingTemporaryKeyspaces: Boolean, private val 
                     if (it.attribute().variables().size > 1) {
                         replacePatternVars(options, varMap, it.attribute())
                     } else {
-                        if (it.attribute().`var`().type() == Variable.Type.NAMED || options.includeAnonymousVariables) {
+                        val isNamedVar = it.attribute().`var`().type() == Variable.Type.NAMED
+                        if (isNamedVar || options.includeAnonymousVariables) {
                             val copyHas = Graql.`var`().has(it.type(), it.attribute()).properties().first()
                             val replaceVar = Variable("mythos_internal_" + v.name() + "_attribute_" + it.attribute().`var`().name())
                             varMap[Variable(it.attribute().`var`().name())] = replaceVar
                             Reflect.on(it.attribute()).set("var", replaceVar)
-                            pattern.properties().add(copyHas)
+                            if (!isNamedVar) pattern.properties().add(copyHas)
                         }
                     }
                 }
