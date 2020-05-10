@@ -115,4 +115,53 @@ internal class LegendConverterTest {
             assertEquals(result.nodes.indexOfFirst { it.name == "\$m" }, it.target)
         }
     }
+
+    @Test
+    fun transitiveLocationRuleTest() {
+        val converter = LegendConverter(true, "mythos_test_" + System.currentTimeMillis(), client)
+        val result = converter.convert(Resources.getResource("TransitiveLocationRule.gql").readText(), QueryOptions())
+
+        assertEquals(4, result.nodes.size)
+        assertTrue(result.nodes.any { it.name == "\$c" && it.type == "entity" && it.category == "city" })
+        assertTrue(result.nodes.any { it.name == "USA" && it.type == "attribute" && it.category == "name" })
+        assertTrue(result.nodes.any { it.name == "Tampa" && it.type == "attribute" && it.category == "name" })
+        assertTrue(result.nodes.any { it.name == "\$co" && it.type == "entity" && it.category == "country" })
+
+        assertEquals(2, result.links.size)
+        (result.links as List<Edge>).find { it.name == "\$cn" }.also {
+            assertEquals(result.nodes.indexOfFirst { it.name == "\$c" }, it!!.source)
+            assertEquals(result.nodes.indexOfFirst { it.name == "Tampa" }, it.target)
+        }
+        (result.links as List<Edge>).find { it.name == "\$con" }.also {
+            assertEquals(result.nodes.indexOfFirst { it.name == "\$co" }, it!!.source)
+            assertEquals(result.nodes.indexOfFirst { it.name == "USA" }, it.target)
+        }
+    }
+
+    @Test
+    fun toUniqueQueryStringTest() {
+        val converter = LegendConverter(true, "mythos_test_" + System.currentTimeMillis(), client)
+        assertEquals(converter.toUniqueQueryString("define\n" +
+                "man sub entity, has name;\n" +
+                "\n" +
+                "insert\n" +
+                "\$m isa man,\n" +
+                "    has name \"Brandon\"; #comment\n" +
+                "#comment\n" +
+                "\n" +
+                "\n" +
+                "match\n" +
+                "\$m isa man, has name \$n;\n" +
+                "get;"),
+                converter.toUniqueQueryString("define man sub entity, has name;\n" +
+                        "\n" +
+                        "\n#comment\n" +
+                        "insert \$m isa man,    has name \"Brandon\"; #comment\n" +
+                        "#comment\n" +
+                        "\n" +
+                        "\n" +
+                        "match \$m isa man, has name \$n; get; #comment\n" +
+                        "#comment\n" +
+                        "\n\n "))
+    }
 }

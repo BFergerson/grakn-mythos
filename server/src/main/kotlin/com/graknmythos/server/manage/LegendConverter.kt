@@ -49,21 +49,26 @@ class LegendConverter(private val usingTemporaryKeyspaces: Boolean, private val 
         private val log = LoggerFactory.getLogger(javaClass.enclosingClass)
     }
 
+    private val queryComment = Regex("[#].*\$", RegexOption.MULTILINE)
+    private val unnecessaryWhitespace = Regex("\\s\\s+")
+
     fun convert(legend: Legend): Graph {
         return convert(legend.query!!, legend.queryOptions)
     }
 
     fun convert(query: String, options: QueryOptions): Graph {
-        if (cache.containsKey(query + "options-" + options.toString())) {
-            return cache[query + "options-" + options.toString()]!!
+        log.info("Keyspace: $keyspace - Query options: " + options.toString().replace("\n", " "))
+        val uniqueQueryText = toUniqueQueryString(query)
+        if (cache.containsKey(uniqueQueryText + "options-" + options.toString())) {
+            return cache[uniqueQueryText + "options-" + options.toString()]!!
         }
         val session: GraknClient.Session = client.session(keyspace)
         var tx = session.transaction().write()
 
-        log.info("Executing query: " + query.replace("\n", " "))
+        log.info("Executing query: $uniqueQueryText")
         try {
             val resultStreams: MutableList<Stream<ConceptMap>> = ArrayList()
-            parseList<GraqlQuery>(query).forEach { graqlQuery ->
+            parseList<GraqlQuery>(uniqueQueryText).forEach { graqlQuery ->
                 when (graqlQuery) {
                     is GraqlDefine -> {
                         log.info("Executing Graql define")
@@ -86,6 +91,7 @@ class LegendConverter(private val usingTemporaryKeyspaces: Boolean, private val 
                         }
 
                         log.info("Executing Graql query")
+                        log.debug("Converted Graql query: " + toUniqueQueryString(graqlQuery.toString()))
                         resultStreams.add(tx.stream(graqlQuery))
                     }
                     is GraqlGet.Group -> {
@@ -108,9 +114,9 @@ class LegendConverter(private val usingTemporaryKeyspaces: Boolean, private val 
                 }
             }
 
-            log.info("Parsing query result(s)")
             val nodes = ArrayList<Node>()
             val edges = HashSet<Any>()
+            log.info("Parsing ${resultStreams.size} query result(s)")
             resultStreams.forEach {
                 val indexMap = HashMap<String, Int>()
                 it.forEach {
@@ -329,8 +335,8 @@ class LegendConverter(private val usingTemporaryKeyspaces: Boolean, private val 
             }
             log.info("Finished parsing query result(s)")
 
-            cache[query + "options-" + options.toString()] = Graph(nodes, edges.toList())
-            return cache[query + "options-" + options.toString()]!!
+            cache[uniqueQueryText + "options-" + options.toString()] = Graph(nodes, edges.toList())
+            return cache[uniqueQueryText + "options-" + options.toString()]!!
         } finally {
             try {
                 tx.commit()
@@ -419,5 +425,18 @@ class LegendConverter(private val usingTemporaryKeyspaces: Boolean, private val 
 
     private fun isRelation(it: Any): Boolean {
         return it is RelationImpl.Local || it is RelationImpl.Remote
+    }
+
+    private fun queryToOneLine(query: String): String {
+        return query.replace(queryComment, "").replace(unnecessaryWhitespace, " ")
+                .replace("\n", " ")
+    }
+
+    fun toUniqueQueryString(query: String): String {
+        val sb = StringBuilder()
+        parseList<GraqlQuery>(query).forEach {
+            sb.append(queryToOneLine(it.toString())).append(" ")
+        }
+        return sb.toString()
     }
 }

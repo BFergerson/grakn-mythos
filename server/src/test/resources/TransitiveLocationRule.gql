@@ -1,0 +1,34 @@
+define
+name sub attribute, datatype string;
+state sub entity, has name,
+    plays located, plays locating;
+city sub entity, has name,
+    plays located, plays locating;
+country sub entity, has name,
+    plays located, plays locating;
+
+location sub relation,
+    relates located,
+    relates locating;
+
+transitive-location sub rule,
+when {
+  (located: $x, locating: $y) isa location; #todo: shouldn't need 'isa location' but tests will fail
+  (located: $y, locating: $z) isa location; #todo: shouldn't need 'isa location' but tests will fail
+},
+then {
+  (located: $x, locating: $z) isa location; #todo: shouldn't need 'isa location' but tests will fail
+};
+
+insert
+$ci isa city, has name "Tampa";
+$s isa state, has name "Florida";
+$co isa country, has name "USA";
+(located: $ci, locating: $s) isa location;
+(located: $s, locating: $co) isa location;
+
+match
+$c isa city, has name $cn;
+$co isa country, has name $con;
+($c, $co);
+get;
