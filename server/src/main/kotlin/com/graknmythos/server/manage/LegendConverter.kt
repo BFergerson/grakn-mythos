@@ -51,6 +51,8 @@ class LegendConverter(private val usingTemporaryKeyspaces: Boolean, private val 
 
     private val queryComment = Regex("[#].*\$", RegexOption.MULTILINE)
     private val unnecessaryWhitespace = Regex("\\s\\s+")
+    private val mythosRelationVariable = Regex("mythos_internal_(.+)_relation_(.+)")
+    private val mythosAttributeVariable = Regex("mythos_internal_(.+)_attribute_(.+)")
 
     fun convert(legend: Legend): Graph {
         return convert(legend.query!!, legend.queryOptions)
@@ -168,7 +170,7 @@ class LegendConverter(private val usingTemporaryKeyspaces: Boolean, private val 
                                 }
                                 varMap[it.key.name()] = node.id
                             } else if (isRelation(it.value) && it.key.toString().contains("mythos_internal")) {
-                                val matches = "mythos_internal_(.+)_relation_(.+)".toRegex().find(it.key.name())!!
+                                val matches = mythosRelationVariable.find(it.key.name())!!
                                 val tmpPlayers = matches.groups[1]!!.value
                                 var text = tmpPlayers + "_"
                                 if (text.contains("mythos_internal")) {
@@ -198,7 +200,7 @@ class LegendConverter(private val usingTemporaryKeyspaces: Boolean, private val 
                         it.map().forEach {
                             if (isAttribute(it.value) && it.key.toString().contains("mythos_internal")) {
                                 val id = it.value.asAttribute<Any>().id().toString()
-                                val matches = "mythos_internal_(.+)_attribute_(.+)".toRegex().find(it.key.name())!!
+                                val matches = mythosAttributeVariable.find(it.key.name())!!
                                 val entityVar = matches.groupValues[1]
                                 if (varMap.containsKey(entityVar)) {
                                     val name = when (options.displayOptions.relationNamingScheme) {
@@ -220,7 +222,7 @@ class LegendConverter(private val usingTemporaryKeyspaces: Boolean, private val 
                                     }
                                 }
                             } else if (isRelation(it.value) && it.key.toString().contains("mythos_internal")) {
-                                val matches = "mythos_internal_(.+)_relation_(.+)".toRegex().find(it.key.name())!!
+                                val matches = mythosRelationVariable.find(it.key.name())!!
                                 val relationId = it.value.asRelation().id().toString()
                                 val name = when (options.displayOptions.relationNamingScheme) {
                                     RelationNamingScheme.BY_VARIABLE -> {
