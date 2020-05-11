@@ -8,6 +8,7 @@ import org.junit.AfterClass
 import org.junit.BeforeClass
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 @Suppress("UNCHECKED_CAST")
@@ -114,6 +115,27 @@ internal class LegendConverterTest {
             assertEquals(result.nodes.indexOfFirst { it.name == "\$m" }, it.source)
             assertEquals(result.nodes.indexOfFirst { it.name == "Brandon" }, it.target)
         }
+    }
+
+    @Test
+    fun basicHyperEntityTest() {
+        val converter = LegendConverter(true, "mythos_test_" + System.currentTimeMillis(), client)
+        val result = converter.convert(Resources.getResource("BasicHyperEntity.gql").readText(), QueryOptions())
+
+        assertEquals(3, result.nodes.size)
+        assertTrue(result.nodes.any { it.name == "Brandon" && it.type == "attribute" && it.category == "name" })
+        assertTrue(result.nodes.any { it.name == "BFergerson" && it.type == "attribute" && it.category == "name" })
+        assertTrue(result.nodes.any { it.name == "\$m" && it.type == "entity" && it.category == "man" })
+
+        assertEquals(2, result.links.size)
+        assertNotNull((result.links as List<Edge>).find {
+            it.name == "\$n" && result.nodes.indexOfFirst { it.name == "\$m" } == it.source
+                    && result.nodes.indexOfFirst { it.name == "Brandon" } == it.target
+        })
+        assertNotNull((result.links as List<Edge>).find {
+            it.name == "\$n" && result.nodes.indexOfFirst { it.name == "\$m" } == it.source
+                    && result.nodes.indexOfFirst { it.name == "BFergerson" } == it.target
+        })
     }
 
     @Test

@@ -1,0 +1,12 @@
+define
+man sub entity, has name;
+name sub attribute, datatype string;
+
+insert
+$m isa man,
+    has name "Brandon",
+    has name "BFergerson";
+
+match
+$m isa man, has name $n;
+get;
