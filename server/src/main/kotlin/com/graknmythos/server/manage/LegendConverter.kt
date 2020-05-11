@@ -120,212 +120,213 @@ class LegendConverter(private val usingTemporaryKeyspaces: Boolean, private val 
             val edges = HashSet<Any>()
             log.info("Parsing ${resultStreams.size} query result(s)")
             resultStreams.forEach {
-                val indexMap = HashMap<String, Int>()
+                val idToIndexMap = HashMap<String, Int>()
                 it.forEach {
                     val varMap = HashMap<String, String>()
                     val hyperRelationVarSet = HashSet<String>()
                     val regularRelationTypeMap = HashMap<String, String>()
-                    if (it.map().isNotEmpty()) {
-                        it.map().forEach {
-                            if (it.value is EntityImpl.Local || it.value is EntityImpl.Remote) {
-                                val id = it.value.asEntity().id().toString()
-                                val entityType = it.value.asEntity().type().label().toString()
-                                val name = when (options.displayOptions.entityNamingScheme) {
-                                    EntityNamingScheme.BY_VARIABLE -> {
-                                        it.key.toString()
-                                    }
-                                    EntityNamingScheme.BY_TYPE -> {
-                                        entityType
-                                    }
-                                    EntityNamingScheme.BY_ID -> {
-                                        id
-                                    }
-                                }
-                                val node = Node(name, id, "entity", entityType)
-                                if (!indexMap.containsKey(node.id)) {
-                                    indexMap[node.id] = nodes.size
-                                    nodes.add(node)
-                                }
-                                varMap[it.key.name()] = node.id
-                            } else if (isAttribute(it.value)) {
-                                val id = it.value.asAttribute<Any>().id().toString()
-                                val value = it.value.asAttribute<Any>().value().toString()
-                                val name = when (options.displayOptions.attributeNamingScheme) {
-                                    AttributeNamingScheme.BY_VALUE -> {
-                                        value
-                                    }
-                                    AttributeNamingScheme.BY_ID -> {
-                                        id
-                                    }
-                                }
 
-                                val node = if (options.displayOptions.attributeNamingScheme == AttributeNamingScheme.BY_ID) {
-                                    Node(name, id, "attribute", it.value.asAttribute<Any>().type().label().toString(), value)
-                                } else {
-                                    Node(name, id, "attribute", it.value.asAttribute<Any>().type().label().toString())
+                    //add entities, attributes, and hyper-relations
+                    it.map().forEach {
+                        if (it.value is EntityImpl.Local || it.value is EntityImpl.Remote) {
+                            val id = it.value.asEntity().id().toString()
+                            val entityType = it.value.asEntity().type().label().toString()
+                            val name = when (options.displayOptions.entityNamingScheme) {
+                                EntityNamingScheme.BY_VARIABLE -> {
+                                    it.key.toString()
                                 }
-                                if (!indexMap.containsKey(node.id)) {
-                                    indexMap[node.id] = nodes.size
-                                    nodes.add(node)
+                                EntityNamingScheme.BY_TYPE -> {
+                                    entityType
                                 }
-                                varMap[it.key.name()] = node.id
-                            } else if (isRelation(it.value) && it.key.toString().contains("mythos_internal")) {
-                                val matches = mythosRelationVariable.find(it.key.name())!!
-                                val tmpPlayers = matches.groups[1]!!.value
-                                var text = tmpPlayers + "_"
-                                if (text.contains("mythos_internal")) {
-                                    while (text.contains("mythos_internal")) {
-                                        //todo: this, but competently
-                                        val start = text.indexOf("mythos_internal")
-                                        val end = text.indexOf("_relation_")
-                                        var afterRelation = text.substring(end).indexOf("mythos")
-                                        if (afterRelation != -1) {
-                                            afterRelation += end
-                                        } else {
-                                            afterRelation = text.length
-                                        }
-                                        val userHyperRelationName = text.substring(end + 10, afterRelation - 1)
-                                        val hyperRelationName = text.substring(start, end)
-                                        val hyperRelationVar = """${hyperRelationName}_relation_${userHyperRelationName}"""
-                                        hyperRelationVarSet.add(hyperRelationVar)
-                                        text = text.replace("""mythos${hyperRelationName}_relation_${userHyperRelationName}_""", "")
-                                    }
-                                } else {
-                                    varMap[it.key.name()] = it.value.asRelation().id().value
-                                    regularRelationTypeMap[it.key.name()] = it.value.asRelation().type().label().value
+                                EntityNamingScheme.BY_ID -> {
+                                    id
                                 }
                             }
-                        }
-
-                        it.map().forEach {
-                            if (isAttribute(it.value) && it.key.toString().contains("mythos_internal")) {
-                                val id = it.value.asAttribute<Any>().id().toString()
-                                val matches = mythosAttributeVariable.find(it.key.name())!!
-                                val entityVar = matches.groupValues[1]
-                                if (varMap.containsKey(entityVar)) {
-                                    val name = when (options.displayOptions.relationNamingScheme) {
-                                        RelationNamingScheme.BY_VARIABLE -> {
-                                            "$" + matches.groupValues.last()
-                                        }
-                                        RelationNamingScheme.BY_TYPE -> {
-                                            it.value.asAttribute<Any>().type().label().value
-                                        }
-                                        RelationNamingScheme.BY_ID -> {
-                                            id
-                                        }
-                                    }
-
-                                    if (options.displayOptions.linkNodesById) {
-                                        edges.add(GraknEdge(varMap[entityVar]!!, id, name, "attribute"))
-                                    } else {
-                                        edges.add(Edge(indexMap[varMap[entityVar]]!!, indexMap[id]!!, name, "attribute"))
-                                    }
+                            val node = Node(name, id, "entity", entityType)
+                            if (!idToIndexMap.containsKey(node.id)) {
+                                idToIndexMap[node.id] = nodes.size
+                                nodes.add(node)
+                            }
+                            varMap[it.key.name()] = node.id
+                        } else if (isAttribute(it.value)) {
+                            val id = it.value.asAttribute<Any>().id().toString()
+                            val value = it.value.asAttribute<Any>().value().toString()
+                            val name = when (options.displayOptions.attributeNamingScheme) {
+                                AttributeNamingScheme.BY_VALUE -> {
+                                    value
                                 }
-                            } else if (isRelation(it.value) && it.key.toString().contains("mythos_internal")) {
-                                val matches = mythosRelationVariable.find(it.key.name())!!
-                                val relationId = it.value.asRelation().id().toString()
+                                AttributeNamingScheme.BY_ID -> {
+                                    id
+                                }
+                            }
+
+                            val node = if (options.displayOptions.attributeNamingScheme == AttributeNamingScheme.BY_ID) {
+                                Node(name, id, "attribute", it.value.asAttribute<Any>().type().label().toString(), value)
+                            } else {
+                                Node(name, id, "attribute", it.value.asAttribute<Any>().type().label().toString())
+                            }
+                            if (!idToIndexMap.containsKey(node.id)) {
+                                idToIndexMap[node.id] = nodes.size
+                                nodes.add(node)
+                            }
+                            varMap[it.key.name()] = node.id
+                        } else if (isRelation(it.value)) {
+                            val matches = mythosRelationVariable.find(it.key.name())!!
+                            val tmpPlayers = matches.groups[1]!!.value
+                            var text = tmpPlayers + "_"
+                            if (text.contains("mythos_internal")) {
+                                while (text.contains("mythos_internal")) {
+                                    //todo: this, but competently
+                                    val start = text.indexOf("mythos_internal")
+                                    val end = text.indexOf("_relation_")
+                                    var afterRelation = text.substring(end).indexOf("mythos")
+                                    if (afterRelation != -1) {
+                                        afterRelation += end
+                                    } else {
+                                        afterRelation = text.length
+                                    }
+                                    val userHyperRelationName = text.substring(end + 10, afterRelation - 1)
+                                    val hyperRelationName = text.substring(start, end)
+                                    val hyperRelationVar = """${hyperRelationName}_relation_${userHyperRelationName}"""
+                                    hyperRelationVarSet.add(hyperRelationVar)
+                                    text = text.replace("""mythos${hyperRelationName}_relation_${userHyperRelationName}_""", "")
+                                }
+                            } else {
+                                varMap[it.key.name()] = it.value.asRelation().id().value
+                                regularRelationTypeMap[it.key.name()] = it.value.asRelation().type().label().value
+                            }
+                        }
+                    }
+
+                    //link entities, attributes, and hyper-relations
+                    it.map().forEach {
+                        if (isAttribute(it.value) && it.key.toString().contains("mythos_internal")) {
+                            val id = it.value.asAttribute<Any>().id().toString()
+                            val matches = mythosAttributeVariable.find(it.key.name())!!
+                            val entityVar = matches.groupValues[1]
+                            if (varMap.containsKey(entityVar)) {
                                 val name = when (options.displayOptions.relationNamingScheme) {
                                     RelationNamingScheme.BY_VARIABLE -> {
                                         "$" + matches.groupValues.last()
                                     }
                                     RelationNamingScheme.BY_TYPE -> {
-                                        it.value.asRelation().type().label().value
+                                        it.value.asAttribute<Any>().type().label().value
                                     }
                                     RelationNamingScheme.BY_ID -> {
-                                        relationId
+                                        id
                                     }
                                 }
-                                val tmpPlayers = matches.groups[1]!!.value
 
-                                var hyperRelation = false
-                                var text = tmpPlayers + "_"
-                                val finalPlayers = ArrayList<String>()
-                                if (text.contains("mythos_internal")) {
-                                    hyperRelation = true
-                                    while (text.contains("mythos_internal")) {
-                                        //todo: this, but competently
-                                        val start = text.indexOf("mythos_internal")
-                                        val end = text.indexOf("_relation_")
-                                        var afterRelation = text.substring(end).indexOf("mythos")
-                                        if (afterRelation != -1) {
-                                            afterRelation += end
-                                        } else {
-                                            afterRelation = text.length
+                                if (options.displayOptions.linkNodesById) {
+                                    edges.add(GraknEdge(varMap[entityVar]!!, id, name, "attribute"))
+                                } else {
+                                    edges.add(Edge(idToIndexMap[varMap[entityVar]]!!, idToIndexMap[id]!!, name, "attribute"))
+                                }
+                            }
+                        } else if (isRelation(it.value) && it.key.toString().contains("mythos_internal")) {
+                            val matches = mythosRelationVariable.find(it.key.name())!!
+                            val relationId = it.value.asRelation().id().toString()
+                            val name = when (options.displayOptions.relationNamingScheme) {
+                                RelationNamingScheme.BY_VARIABLE -> {
+                                    "$" + matches.groupValues.last()
+                                }
+                                RelationNamingScheme.BY_TYPE -> {
+                                    it.value.asRelation().type().label().value
+                                }
+                                RelationNamingScheme.BY_ID -> {
+                                    relationId
+                                }
+                            }
+                            val tmpPlayers = matches.groups[1]!!.value
+
+                            var hyperRelation = false
+                            var text = tmpPlayers + "_"
+                            val finalPlayers = ArrayList<String>()
+                            if (text.contains("mythos_internal")) {
+                                hyperRelation = true
+                                while (text.contains("mythos_internal")) {
+                                    //todo: this, but competently
+                                    val start = text.indexOf("mythos_internal")
+                                    val end = text.indexOf("_relation_")
+                                    var afterRelation = text.substring(end).indexOf("mythos")
+                                    if (afterRelation != -1) {
+                                        afterRelation += end
+                                    } else {
+                                        afterRelation = text.length
+                                    }
+                                    val userHyperRelationName = text.substring(end + 10, afterRelation - 1)
+                                    val tempHyperRelationName = text.substring(start, end)
+                                    val hyperRelationVar = """${tempHyperRelationName}_relation_${userHyperRelationName}"""
+                                    finalPlayers.add(hyperRelationVar)
+
+                                    val hyperRelationType = regularRelationTypeMap[hyperRelationVar]!!
+                                    val hyperRelationId = varMap[hyperRelationVar]!!
+                                    val hyperRelationNodeName = when (options.displayOptions.relationNamingScheme) {
+                                        RelationNamingScheme.BY_VARIABLE -> {
+                                            "$$userHyperRelationName"
                                         }
-                                        val userHyperRelationName = text.substring(end + 10, afterRelation - 1)
-                                        val tempHyperRelationName = text.substring(start, end)
-                                        val hyperRelationVar = """${tempHyperRelationName}_relation_${userHyperRelationName}"""
-                                        finalPlayers.add(hyperRelationVar)
+                                        RelationNamingScheme.BY_TYPE -> {
+                                            hyperRelationType
+                                        }
+                                        RelationNamingScheme.BY_ID -> {
+                                            hyperRelationId
+                                        }
+                                    }
+                                    val node = Node(hyperRelationNodeName, hyperRelationId, "relation", hyperRelationType)
+                                    if (!idToIndexMap.containsKey(node.id)) {
+                                        idToIndexMap[node.id] = nodes.size
+                                        nodes.add(node)
+                                    }
+                                    varMap[it.key.name()] = node.id
 
-                                        val hyperRelationType = regularRelationTypeMap[hyperRelationVar]!!
-                                        val hyperRelationId = varMap[hyperRelationVar]!!
-                                        val hyperRelationNodeName = when (options.displayOptions.relationNamingScheme) {
+                                    val hyperPlayers = ArrayList<String>()
+                                    val players = (tempHyperRelationName + "_").split("mythos")
+                                    players.forEach {
+                                        if (!it.isEmpty() && it != "_internal_") {
+                                            hyperPlayers.add(it.substring(0, it.length - 1))
+                                        }
+                                    }
+                                    for (i in hyperPlayers.indices) {
+                                        val source = hyperPlayers[i]
+                                        val hyperRelationPlayerName = when (options.displayOptions.relationNamingScheme) {
                                             RelationNamingScheme.BY_VARIABLE -> {
-                                                "$$userHyperRelationName"
+                                                "$$source"
                                             }
                                             RelationNamingScheme.BY_TYPE -> {
                                                 hyperRelationType
                                             }
                                             RelationNamingScheme.BY_ID -> {
-                                                hyperRelationId
+                                                varMap[source]!!
                                             }
                                         }
-                                        val node = Node(hyperRelationNodeName, hyperRelationId, "relation", hyperRelationType)
-                                        if (!indexMap.containsKey(node.id)) {
-                                            indexMap[node.id] = nodes.size
-                                            nodes.add(node)
-                                        }
-                                        varMap[it.key.name()] = node.id
 
-                                        val hyperPlayers = ArrayList<String>()
-                                        val players = (tempHyperRelationName + "_").split("mythos")
-                                        players.forEach {
-                                            if (!it.isEmpty() && it != "_internal_") {
-                                                hyperPlayers.add(it.substring(0, it.length - 1))
-                                            }
+                                        if (options.displayOptions.linkNodesById) {
+                                            edges.add(GraknEdge(varMap[source]!!, hyperRelationId, hyperRelationPlayerName, "relation"))
+                                        } else {
+                                            edges.add(Edge(idToIndexMap[varMap[source]]!!, idToIndexMap[hyperRelationId]!!, hyperRelationPlayerName, "relation"))
                                         }
-                                        for (i in hyperPlayers.indices) {
-                                            val source = hyperPlayers[i]
-                                            val hyperRelationPlayerName = when (options.displayOptions.relationNamingScheme) {
-                                                RelationNamingScheme.BY_VARIABLE -> {
-                                                    "$$source"
-                                                }
-                                                RelationNamingScheme.BY_TYPE -> {
-                                                    hyperRelationType
-                                                }
-                                                RelationNamingScheme.BY_ID -> {
-                                                    varMap[source]!!
-                                                }
-                                            }
-
-                                            if (options.displayOptions.linkNodesById) {
-                                                edges.add(GraknEdge(varMap[source]!!, hyperRelationId, hyperRelationPlayerName, "relation"))
-                                            } else {
-                                                edges.add(Edge(indexMap[varMap[source]]!!, indexMap[hyperRelationId]!!, hyperRelationPlayerName, "relation"))
-                                            }
-                                        }
-                                        text = text.replace("""mythos${tempHyperRelationName}_relation_${userHyperRelationName}_""", "")
+                                    }
+                                    text = text.replace("""mythos${tempHyperRelationName}_relation_${userHyperRelationName}_""", "")
+                                }
+                            }
+                            if (hyperRelation || !hyperRelationVarSet.contains(it.key.name())) {
+                                val players = text.split("mythos")
+                                players.forEach {
+                                    if (!it.isEmpty()) {
+                                        finalPlayers.add(it.substring(0, it.length - 1))
                                     }
                                 }
-                                if (hyperRelation || !hyperRelationVarSet.contains(it.key.name())) {
-                                    val players = text.split("mythos")
-                                    players.forEach {
-                                        if (!it.isEmpty()) {
-                                            finalPlayers.add(it.substring(0, it.length - 1))
-                                        }
-                                    }
 
-                                    for (i in finalPlayers.indices) {
-                                        if (i + 1 < finalPlayers.size) {
-                                            for (z in i + 1 until finalPlayers.size) {
-                                                val source = finalPlayers[i]
-                                                val target = finalPlayers[z]
+                                for (i in finalPlayers.indices) {
+                                    if (i + 1 < finalPlayers.size) {
+                                        for (z in i + 1 until finalPlayers.size) {
+                                            val source = finalPlayers[i]
+                                            val target = finalPlayers[z]
 
-                                                if (options.displayOptions.linkNodesById) {
-                                                    edges.add(GraknEdge(varMap[source]!!, varMap[target]!!, name, "relation"))
-                                                } else {
-                                                    edges.add(Edge(indexMap[varMap[source]]!!, indexMap[varMap[target]]!!, name, "relation"))
-                                                }
+                                            if (options.displayOptions.linkNodesById) {
+                                                edges.add(GraknEdge(varMap[source]!!, varMap[target]!!, name, "relation"))
+                                            } else {
+                                                edges.add(Edge(idToIndexMap[varMap[source]]!!, idToIndexMap[varMap[target]]!!, name, "relation"))
                                             }
                                         }
                                     }
@@ -364,7 +365,7 @@ class LegendConverter(private val usingTemporaryKeyspaces: Boolean, private val 
 
     private fun replacePatternVars(options: QueryOptions, varMap: HashMap<Variable, Variable>, pattern: Pattern) {
         if (pattern is StatementThing) {
-            val v = pattern.`var`()
+            val entityVar = pattern.`var`()
             HashSet(pattern.properties()).forEach {
                 if (it is HasAttributeProperty) {
                     if (it.attribute().variables().size > 1) {
@@ -373,7 +374,7 @@ class LegendConverter(private val usingTemporaryKeyspaces: Boolean, private val 
                         val isNamedVar = it.attribute().`var`().type() == Variable.Type.NAMED
                         if (isNamedVar || options.includeAnonymousVariables) {
                             val copyHas = Graql.`var`().has(it.type(), it.attribute()).properties().first()
-                            val replaceVar = Variable("mythos_internal_" + v.name() + "_attribute_" + it.attribute().`var`().name())
+                            val replaceVar = Variable("mythos_internal_" + entityVar.name() + "_attribute_" + it.attribute().`var`().name())
                             varMap[Variable(it.attribute().`var`().name())] = replaceVar
                             Reflect.on(it.attribute()).set("var", replaceVar)
                             if (!isNamedVar) pattern.properties().add(copyHas)
