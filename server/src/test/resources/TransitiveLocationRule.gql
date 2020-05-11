@@ -13,8 +13,8 @@ location sub relation,
 
 transitive-location sub rule,
 when {
-  (located: $x, locating: $y) isa location; #todo: shouldn't need 'isa location' but tests will fail
-  (located: $y, locating: $z) isa location; #todo: shouldn't need 'isa location' but tests will fail
+  (located: $x, locating: $y);
+  (located: $y, locating: $z);
 },
 then {
   (located: $x, locating: $z) isa location; #todo: shouldn't need 'isa location' but tests will fail
