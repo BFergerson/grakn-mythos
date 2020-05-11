@@ -10,7 +10,7 @@ import grakn.client.answer.ConceptMap
 import grakn.client.concept.thing.impl.AttributeImpl
 import grakn.client.concept.thing.impl.EntityImpl
 import grakn.client.concept.thing.impl.RelationImpl
-import graql.lang.Graql
+import graql.lang.Graql.`var`
 import graql.lang.Graql.parseList
 import graql.lang.pattern.Disjunction
 import graql.lang.pattern.Pattern
@@ -122,13 +122,13 @@ class LegendConverter(private val usingTemporaryKeyspaces: Boolean, private val 
             resultStreams.forEach {
                 val idToIndexMap = HashMap<String, Int>()
                 it.forEach {
-                    val varMap = HashMap<String, String>()
+                    val varToIdMap = HashMap<String, String>()
                     val hyperRelationVarSet = HashSet<String>()
                     val regularRelationTypeMap = HashMap<String, String>()
 
                     //add entities, attributes, and hyper-relations
                     it.map().forEach {
-                        if (it.value is EntityImpl.Local || it.value is EntityImpl.Remote) {
+                        if (isEntity(it.value)) {
                             val id = it.value.asEntity().id().toString()
                             val entityType = it.value.asEntity().type().label().toString()
                             val name = when (options.displayOptions.entityNamingScheme) {
@@ -147,7 +147,7 @@ class LegendConverter(private val usingTemporaryKeyspaces: Boolean, private val 
                                 idToIndexMap[node.id] = nodes.size
                                 nodes.add(node)
                             }
-                            varMap[it.key.name()] = node.id
+                            varToIdMap[it.key.name()] = node.id
                         } else if (isAttribute(it.value)) {
                             val id = it.value.asAttribute<Any>().id().toString()
                             val value = it.value.asAttribute<Any>().value().toString()
@@ -169,7 +169,7 @@ class LegendConverter(private val usingTemporaryKeyspaces: Boolean, private val 
                                 idToIndexMap[node.id] = nodes.size
                                 nodes.add(node)
                             }
-                            varMap[it.key.name()] = node.id
+                            varToIdMap[it.key.name()] = node.id
                         } else if (isRelation(it.value)) {
                             val matches = mythosRelationVariable.find(it.key.name())!!
                             val tmpPlayers = matches.groups[1]!!.value
@@ -192,7 +192,7 @@ class LegendConverter(private val usingTemporaryKeyspaces: Boolean, private val 
                                     text = text.replace("""mythos${hyperRelationName}_relation_${userHyperRelationName}_""", "")
                                 }
                             } else {
-                                varMap[it.key.name()] = it.value.asRelation().id().value
+                                varToIdMap[it.key.name()] = it.value.asRelation().id().value
                                 regularRelationTypeMap[it.key.name()] = it.value.asRelation().type().label().value
                             }
                         }
@@ -201,10 +201,10 @@ class LegendConverter(private val usingTemporaryKeyspaces: Boolean, private val 
                     //link entities, attributes, and hyper-relations
                     it.map().forEach {
                         if (isAttribute(it.value) && it.key.toString().contains("mythos_internal")) {
-                            val id = it.value.asAttribute<Any>().id().toString()
+                            val attributeId = it.value.asAttribute<Any>().id().toString()
                             val matches = mythosAttributeVariable.find(it.key.name())!!
-                            val entityVar = matches.groupValues[1]
-                            if (varMap.containsKey(entityVar)) {
+                            val attributeEntityVar = matches.groupValues[1]
+                            if (varToIdMap.containsKey(attributeEntityVar)) {
                                 val name = when (options.displayOptions.relationNamingScheme) {
                                     RelationNamingScheme.BY_VARIABLE -> {
                                         "$" + matches.groupValues.last()
@@ -213,19 +213,19 @@ class LegendConverter(private val usingTemporaryKeyspaces: Boolean, private val 
                                         it.value.asAttribute<Any>().type().label().value
                                     }
                                     RelationNamingScheme.BY_ID -> {
-                                        id
+                                        attributeId
                                     }
                                 }
 
                                 if (options.displayOptions.linkNodesById) {
-                                    edges.add(GraknEdge(varMap[entityVar]!!, id, name, "attribute"))
+                                    edges.add(GraknEdge(varToIdMap[attributeEntityVar]!!, attributeId, name, "attribute"))
                                 } else {
-                                    edges.add(Edge(idToIndexMap[varMap[entityVar]]!!, idToIndexMap[id]!!, name, "attribute"))
+                                    edges.add(Edge(idToIndexMap[varToIdMap[attributeEntityVar]]!!, idToIndexMap[attributeId]!!, name, "attribute"))
                                 }
                             }
                         } else if (isRelation(it.value) && it.key.toString().contains("mythos_internal")) {
-                            val matches = mythosRelationVariable.find(it.key.name())!!
                             val relationId = it.value.asRelation().id().toString()
+                            val matches = mythosRelationVariable.find(it.key.name())!!
                             val name = when (options.displayOptions.relationNamingScheme) {
                                 RelationNamingScheme.BY_VARIABLE -> {
                                     "$" + matches.groupValues.last()
@@ -260,7 +260,7 @@ class LegendConverter(private val usingTemporaryKeyspaces: Boolean, private val 
                                     finalPlayers.add(hyperRelationVar)
 
                                     val hyperRelationType = regularRelationTypeMap[hyperRelationVar]!!
-                                    val hyperRelationId = varMap[hyperRelationVar]!!
+                                    val hyperRelationId = varToIdMap[hyperRelationVar]!!
                                     val hyperRelationNodeName = when (options.displayOptions.relationNamingScheme) {
                                         RelationNamingScheme.BY_VARIABLE -> {
                                             "$$userHyperRelationName"
@@ -277,7 +277,7 @@ class LegendConverter(private val usingTemporaryKeyspaces: Boolean, private val 
                                         idToIndexMap[node.id] = nodes.size
                                         nodes.add(node)
                                     }
-                                    varMap[it.key.name()] = node.id
+                                    varToIdMap[it.key.name()] = node.id
 
                                     val hyperPlayers = ArrayList<String>()
                                     val players = (tempHyperRelationName + "_").split("mythos")
@@ -296,14 +296,14 @@ class LegendConverter(private val usingTemporaryKeyspaces: Boolean, private val 
                                                 hyperRelationType
                                             }
                                             RelationNamingScheme.BY_ID -> {
-                                                varMap[source]!!
+                                                varToIdMap[source]!!
                                             }
                                         }
 
                                         if (options.displayOptions.linkNodesById) {
-                                            edges.add(GraknEdge(varMap[source]!!, hyperRelationId, hyperRelationPlayerName, "relation"))
+                                            edges.add(GraknEdge(varToIdMap[source]!!, hyperRelationId, hyperRelationPlayerName, "relation"))
                                         } else {
-                                            edges.add(Edge(idToIndexMap[varMap[source]]!!, idToIndexMap[hyperRelationId]!!, hyperRelationPlayerName, "relation"))
+                                            edges.add(Edge(idToIndexMap[varToIdMap[source]]!!, idToIndexMap[hyperRelationId]!!, hyperRelationPlayerName, "relation"))
                                         }
                                     }
                                     text = text.replace("""mythos${tempHyperRelationName}_relation_${userHyperRelationName}_""", "")
@@ -324,9 +324,9 @@ class LegendConverter(private val usingTemporaryKeyspaces: Boolean, private val 
                                             val target = finalPlayers[z]
 
                                             if (options.displayOptions.linkNodesById) {
-                                                edges.add(GraknEdge(varMap[source]!!, varMap[target]!!, name, "relation"))
+                                                edges.add(GraknEdge(varToIdMap[source]!!, varToIdMap[target]!!, name, "relation"))
                                             } else {
-                                                edges.add(Edge(idToIndexMap[varMap[source]]!!, idToIndexMap[varMap[target]]!!, name, "relation"))
+                                                edges.add(Edge(idToIndexMap[varToIdMap[source]]!!, idToIndexMap[varToIdMap[target]]!!, name, "relation"))
                                             }
                                         }
                                     }
@@ -368,15 +368,18 @@ class LegendConverter(private val usingTemporaryKeyspaces: Boolean, private val 
             val entityVar = pattern.`var`()
             HashSet(pattern.properties()).forEach {
                 if (it is HasAttributeProperty) {
-                    if (it.attribute().variables().size > 1) {
-                        replacePatternVars(options, varMap, it.attribute())
+                    val attribute = it.attribute()
+                    if (attribute.variables().size > 1) {
+                        replacePatternVars(options, varMap, attribute)
                     } else {
-                        val isNamedVar = it.attribute().`var`().type() == Variable.Type.NAMED
+                        val attributeVar = attribute.`var`()
+                        val isNamedVar = attributeVar.type() == Variable.Type.NAMED
                         if (isNamedVar || options.includeAnonymousVariables) {
-                            val copyHas = Graql.`var`().has(it.type(), it.attribute()).properties().first()
-                            val replaceVar = Variable("mythos_internal_" + entityVar.name() + "_attribute_" + it.attribute().`var`().name())
-                            varMap[Variable(it.attribute().`var`().name())] = replaceVar
-                            Reflect.on(it.attribute()).set("var", replaceVar)
+                            val copyHas = `var`().has(it.type(), attribute).properties().first()
+                            val replaceVarName = "mythos_internal_" + entityVar.name() + "_attribute_" + attributeVar.name()
+                            val replaceVar = Variable(replaceVarName)
+                            varMap[Variable(attributeVar.name())] = replaceVar
+                            Reflect.on(attribute).set("var", replaceVar)
                             if (!isNamedVar) pattern.properties().add(copyHas)
                         }
                     }
@@ -421,6 +424,10 @@ class LegendConverter(private val usingTemporaryKeyspaces: Boolean, private val 
                 }
             }
         }
+    }
+
+    private fun isEntity(it: Any): Boolean {
+        return it is EntityImpl.Local || it is EntityImpl.Remote
     }
 
     private fun isAttribute(it: Any): Boolean {
