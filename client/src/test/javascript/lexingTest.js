@@ -1,10 +1,10 @@
 let assert = require('assert');
 let parserFacade = require('../../main-generated/javascript/ParserFacade.js');
-let GraqlLexer = require('../../main-generated/javascript/GraqlLexer.js').GraqlLexer;
+let TypeQLLexer = require('../../main-generated/javascript/TypeQLLexer.js').TypeQLLexer;
 
 function checkToken(tokens, index, typeName, column, text) {
     it('should have ' + typeName + ' in position ' + index, function () {
-        assert.equal(tokens[index].type, GraqlLexer[typeName]);
+        assert.equal(tokens[index].type, TypeQLLexer[typeName]);
         assert.equal(tokens[index].column, column);
         assert.equal(tokens[index].text, text);
     });
@@ -17,10 +17,10 @@ describe('Basic lexing with spaces', function () {
     });
     checkToken(tokens, 0, 'DEFINE', 0, "define");
     checkToken(tokens, 1, 'WS', 6, " ");
-    checkToken(tokens, 2, 'TYPE_NAME_', 7, "man");
+    checkToken(tokens, 2, 'LABEL_', 7, "man");
     checkToken(tokens, 3, 'WS', 10, " ");
     checkToken(tokens, 4, 'SUB_', 11, "sub");
     checkToken(tokens, 5, 'WS', 14, " ");
     checkToken(tokens, 6, 'ENTITY', 15, "entity");
-    checkToken(tokens, 7, 'T__1', 21, ";");
+    checkToken(tokens, 7, 'T__0', 21, ";");
 });

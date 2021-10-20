@@ -20,30 +20,30 @@ task compileTypeScriptAndPack(type: Exec) {
 }
 
 task generateLexer(type: JavaExec) {
-    def lexerName = "GraqlLexer"
-    inputs.file("$ANTLR_SRC/Graql.g4")
+    def lexerName = "TypeQLLexer"
+    inputs.file("$ANTLR_SRC/TypeQL.g4")
     outputs.file("$GEN_JS_SRC/${lexerName}.js")
     outputs.file("$GEN_JS_SRC/${lexerName}.interp")
     outputs.file("$GEN_JS_SRC/${lexerName}.tokens")
     main = 'org.antlr.v4.Tool'
     classpath = sourceSets.main.runtimeClasspath
-    args = ['-Dlanguage=JavaScript', "Graql.g4", '-o', '../../main-generated/javascript']
-    workingDir = ANTLR_SRC
+    args = ['-Dlanguage=JavaScript', "TypeQL.g4", '-o', '../../main-generated/javascript']
+    setWorkingDir(ANTLR_SRC)
 }
 
 task generateParser(type: JavaExec) {
     dependsOn generateLexer
-    def lexerName = "GraqlLexer"
-    def parserName = "GraqlParser"
-    inputs.file("$ANTLR_SRC/Graql.g4")
+    def lexerName = "TypeQLLexer"
+    def parserName = "TypeQLParser"
+    inputs.file("$ANTLR_SRC/TypeQL.g4")
     inputs.file("$GEN_JS_SRC/${lexerName}.tokens")
     outputs.file("$GEN_JS_SRC/${parserName}.js")
     outputs.file("$GEN_JS_SRC/${parserName}.interp")
     outputs.file("$GEN_JS_SRC/${parserName}.tokens")
     main = 'org.antlr.v4.Tool'
     classpath = sourceSets.main.runtimeClasspath
-    args = ['-Dlanguage=JavaScript', "Graql.g4", '-no-listener', '-no-visitor', '-o', '../../main-generated/javascript']
-    workingDir = ANTLR_SRC
+    args = ['-Dlanguage=JavaScript', "TypeQL.g4", '-no-listener', '-no-visitor', '-o', '../../main-generated/javascript']
+    setWorkingDir(ANTLR_SRC)
 }
 
 task testJavaScript(type: Exec) {

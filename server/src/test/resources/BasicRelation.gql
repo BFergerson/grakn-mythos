@@ -1,6 +1,6 @@
 define
-man sub entity, plays is_man;
-city sub entity, plays at_city;
+man sub entity, plays lives-in:is_man;
+city sub entity, plays lives-in:at_city;
 
 lives-in sub relation,
     relates is_man,
@@ -15,4 +15,3 @@ match
 $m isa man;
 $c isa city;
 $x ($m, $c);
-get;

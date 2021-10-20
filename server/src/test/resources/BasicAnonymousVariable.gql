@@ -1,10 +1,9 @@
 define
-man sub entity, has name;
-name sub attribute, datatype string;
+man sub entity, owns name;
+name sub attribute, value string;
 
 insert
 $m isa man, has name "Brandon";
 
 match
 $m isa man, has name "Brandon";
-get;

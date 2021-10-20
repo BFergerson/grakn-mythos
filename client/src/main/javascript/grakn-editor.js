@@ -6,9 +6,9 @@ self.MonacoEnvironment = {
     }
 }
 
-monaco.languages.register({id: 'graql'});
-monaco.languages.setTokensProvider('graql', new GraqlTokensProvider.GraqlTokensProvider());
-monaco.languages.setLanguageConfiguration('graql', {
+monaco.languages.register({id: 'typeql'});
+monaco.languages.setTokensProvider('typeql', new TypeQLTokensProvider.TypeQLTokensProvider());
+monaco.languages.setLanguageConfiguration('typeql', {
     comments: {
         lineComment: "#"
     }
@@ -23,7 +23,7 @@ let errorFg = 'ff0000';
 let commentFg = '636c79'
 let datatypeFg = '032f62';
 
-monaco.editor.defineTheme('graqlTheme', {
+monaco.editor.defineTheme('typeqlTheme', {
     base: 'vs',
     inherit: false,
     rules: [
@@ -73,8 +73,8 @@ window.editor = monaco.editor.create(document.getElementById('container'), {
     value: [
         legendQuery
     ].join('\n'),
-    language: 'graql',
-    theme: 'graqlTheme'
+    language: 'typeql',
+    theme: 'typeqlTheme'
 });
 window.editor.onDidChangeModelContent(function (e) {
     let code = window.editor.getValue()

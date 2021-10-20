@@ -1,43 +1,17 @@
 package com.graknmythos.server
 
 import com.google.common.io.Resources
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import com.graknmythos.server.manage.MythosInternal
-import grakn.client.GraknClient
-import io.ktor.application.Application
-import io.ktor.application.call
-import io.ktor.application.install
+import com.vaticle.typedb.client.connection.core.CoreClient
+import io.ktor.application.*
 import io.ktor.features.*
-import io.ktor.http.ContentType
-import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpStatusCode
-import io.ktor.http.content.files
-import io.ktor.http.content.static
-import io.ktor.request.header
-import io.ktor.request.receiveText
-import io.ktor.request.uri
-import io.ktor.response.header
-import io.ktor.response.respondRedirect
-import io.ktor.response.respondText
-import io.ktor.routing.Routing
-import io.ktor.routing.get
-import io.ktor.routing.post
-import io.ktor.routing.routing
-import io.ktor.server.engine.applicationEngineEnvironment
-import io.ktor.server.engine.connector
-import io.ktor.server.engine.embeddedServer
-import io.ktor.server.engine.sslConnector
-import io.ktor.server.jetty.Jetty
+import io.ktor.routing.*
+import io.ktor.server.engine.*
+import io.ktor.server.jetty.*
 import kotlinx.cli.*
-import org.apache.commons.lang3.RandomStringUtils
-import org.apache.commons.text.StringEscapeUtils
-import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileInputStream
 import java.security.KeyStore
-import java.time.ZoneId
-import java.time.ZonedDateTime
 
 /**
  * Primary entry point for the mythos server.
@@ -52,7 +26,7 @@ fun main(args: Array<String>) {
     val websiteDisabled by parser.option(ArgType.Boolean, shortName = "wd", description = "Website disabled").default(false)
 
     val graknHost by parser.option(ArgType.String, shortName = "gh", description = "Grakn host").default("localhost")
-    val graknPort by parser.option(ArgType.Int, shortName = "gp", description = "Grakn port").default(48555)
+    val graknPort by parser.option(ArgType.Int, shortName = "gp", description = "Grakn port").default(1729)
     val graknKeyspace by parser.option(ArgType.String, shortName = "gk", description = "Grakn keyspace (otherwise uses temporary keyspaces)")
 
     val sslEnabled by parser.option(ArgType.Boolean, shortName = "ssl", description = "SSL enabled").default(false)
@@ -102,7 +76,7 @@ fun Application.main(graknUri: String, websiteEnabled: Boolean, staticKeyspace: 
 
     val imageStorageLocation = File("../data/legend-images").absoluteFile
     imageStorageLocation.mkdirs()
-    val client = GraknClient(graknUri)
+    val client = CoreClient(graknUri)
     val mythosInternal = MythosInternal(client, imageStorageLocation, staticKeyspace)
     mythosInternal.installSchema(Resources.getResource("grakn_mythos.gql").readText())
 

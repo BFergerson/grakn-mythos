@@ -6,7 +6,7 @@ import com.graknmythos.server.manage.MythosInternal
 import com.graknmythos.server.model.api.ExecuteLegendRequest
 import com.graknmythos.server.model.api.SaveLegendRequest
 import com.graknmythos.server.model.api.SaveLegendResponse
-import grakn.client.GraknClient
+import com.vaticle.typedb.client.api.connection.TypeDBClient
 import io.ktor.application.call
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
@@ -30,7 +30,7 @@ import java.time.ZonedDateTime
  * @since 0.1.0
  * @author [Brandon Fergerson](mailto:bfergerson@apache.org)
  */
-fun Route.apiRouting(mythosInternal: MythosInternal, client: GraknClient) {
+fun Route.apiRouting(mythosInternal: MythosInternal, client: TypeDBClient) {
     val log = LoggerFactory.getLogger("MythosAPI")
 
     get("/api/legend/{legendId}") {

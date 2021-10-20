@@ -1,9 +1,9 @@
 define
-man sub entity, has name, has age, has birth, has citizen;
-name sub attribute, datatype string;
-age sub attribute, datatype long;
-birth sub attribute, datatype date;
-citizen sub attribute, datatype boolean;
+man sub entity, owns name, owns age, owns birth, owns citizen;
+name sub attribute, value string;
+age sub attribute, value long;
+birth sub attribute, value datetime;
+citizen sub attribute, value boolean;
 
 insert
 $m isa man,
@@ -14,4 +14,3 @@ $m isa man,
 
 match
 $m isa man, has name $n, has age $a, has birth $b, has citizen $c;
-get;
