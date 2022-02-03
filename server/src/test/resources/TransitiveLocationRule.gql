@@ -1,22 +1,21 @@
 define
-name sub attribute, datatype string;
-state sub entity, has name,
-    plays located, plays locating;
-city sub entity, has name,
-    plays located, plays locating;
-country sub entity, has name,
-    plays located, plays locating;
+name sub attribute, value string;
+state sub entity, owns name,
+    plays location:located, plays location:locating;
+city sub entity, owns name,
+    plays location:located, plays location:locating;
+country sub entity, owns name,
+    plays location:located, plays location:locating;
 
 location sub relation,
     relates located,
     relates locating;
 
-transitive-location sub rule,
+rule transitive-location:
 when {
-  (located: $x, locating: $y);
-  (located: $y, locating: $z);
-},
-then {
+  (located: $x, locating: $y) isa location;
+  (located: $y, locating: $z) isa location;
+} then {
   (located: $x, locating: $z) isa location; #todo: shouldn't need 'isa location' but tests will fail
 };
 
@@ -31,4 +30,3 @@ match
 $c isa city, has name $cn;
 $co isa country, has name $con;
 ($c, $co);
-get;

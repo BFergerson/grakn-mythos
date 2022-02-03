@@ -4,9 +4,9 @@ import {error} from 'antlr4/index'
 import ILineTokens = monaco.languages.ILineTokens;
 import IToken = monaco.languages.IToken;
 
-export class GraqlState implements monaco.languages.IState {
+export class TypeQLState implements monaco.languages.IState {
     clone(): monaco.languages.IState {
-        return new GraqlState();
+        return new TypeQLState();
     }
 
     equals(other: monaco.languages.IState): boolean {
@@ -14,9 +14,9 @@ export class GraqlState implements monaco.languages.IState {
     }
 }
 
-export class GraqlTokensProvider implements monaco.languages.TokensProvider {
+export class TypeQLTokensProvider implements monaco.languages.TokensProvider {
     getInitialState(): monaco.languages.IState {
-        return new GraqlState();
+        return new TypeQLState();
     }
 
     tokenize(line: string, state: monaco.languages.IState): monaco.languages.ILineTokens {
@@ -27,7 +27,7 @@ export class GraqlTokensProvider implements monaco.languages.TokensProvider {
 
 const EOF = -1;
 
-class GraqlToken implements IToken {
+class TypeQLToken implements IToken {
     scopes: string;
     startIndex: number;
 
@@ -41,12 +41,12 @@ class GraqlToken implements IToken {
     }
 }
 
-class GraqlLineTokens implements ILineTokens {
+class TypeQLLineTokens implements ILineTokens {
     endState: monaco.languages.IState;
     tokens: monaco.languages.IToken[];
 
     constructor(tokens: monaco.languages.IToken[]) {
-        this.endState = new GraqlState();
+        this.endState = new TypeQLState();
         this.tokens = tokens;
     }
 }
@@ -75,16 +75,16 @@ export function tokensForLine(input: string): monaco.languages.ILineTokens {
                 done = true;
             } else {
                 let tokenTypeName = lexer.symbolicNames[token.type];
-                let myToken = new GraqlToken(tokenTypeName, token.column);
+                let myToken = new TypeQLToken(tokenTypeName, token.column);
                 myTokens.push(myToken);
             }
         }
     } while (!done);
 
     for (let e of errorStartingPoints) {
-        myTokens.push(new GraqlToken("error.gql", e));
+        myTokens.push(new TypeQLToken("error.tql", e));
     }
     myTokens.sort((a, b) => (a.startIndex > b.startIndex) ? 1 : -1)
 
-    return new GraqlLineTokens(myTokens);
+    return new TypeQLLineTokens(myTokens);
 }

@@ -1,6 +1,6 @@
-const GraqlTokensProvider = require('../../main-generated/javascript/GraqlTokensProvider.js');
+const TypeQLTokensProvider = require('../../main-generated/javascript/TypeQLTokensProvider.js');
 const ParserFacade = require('../../main-generated/javascript/ParserFacade.js');
-window.GraqlTokensProvider = GraqlTokensProvider;
+window.TypeQLTokensProvider = TypeQLTokensProvider;
 window.ParserFacade = ParserFacade;
 
 $('.dropdown-menu a.dropdown-toggle').on('click', function(e) {

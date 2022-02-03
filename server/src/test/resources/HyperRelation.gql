@@ -1,20 +1,20 @@
 define
-name sub attribute, datatype string;
+name sub attribute, value string;
 
 city sub entity,
-    has name,
-    plays is_city;
+    owns name,
+    plays marriage-located:is_city;
 husband sub entity,
-    has name,
-    plays is_husband;
+    owns name,
+    plays marriage:is_husband;
 wife sub entity,
-    has name,
-    plays is_wife;
+    owns name,
+    plays marriage:is_wife;
 
 marriage sub relation,
     relates is_husband,
     relates is_wife,
-    plays is_marriage;
+    plays marriage-located:is_marriage;
 marriage-located sub relation,
     relates is_city,
     relates is_marriage;
@@ -36,4 +36,3 @@ $m (is_husband: $h, is_wife: $w)
     isa marriage;
 $ml (is_city: $c, is_marriage: $m)
     isa marriage-located;
-get;

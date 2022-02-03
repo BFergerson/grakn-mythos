@@ -1,11 +1,11 @@
 import {CommonTokenStream, error, InputStream, Parser, Token} from 'antlr4/index'
 import {DefaultErrorStrategy} from 'antlr4/error/ErrorStrategy'
-import {GraqlLexer} from "../../main-generated/javascript/GraqlLexer.js"
-import {GraqlParser} from "../../main-generated/javascript/GraqlParser.js"
+import {TypeQLLexer} from "../../main-generated/javascript/TypeQLLexer.js"
+import {TypeQLParser} from "../../main-generated/javascript/TypeQLParser.js"
 
 class ConsoleErrorListener extends error.ErrorListener {
     syntaxError(recognizer, offendingSymbol, line, column, msg, e) {
-        console.log("Graql parse error: " + msg);
+        console.log("TypeQL parse error: " + msg);
     }
 }
 
@@ -44,7 +44,7 @@ class CollectorErrorListener extends error.ErrorListener {
 
 export function createLexer(input: String) {
     const chars = new InputStream(input);
-    const lexer = new GraqlLexer(chars);
+    const lexer = new TypeQLLexer(chars);
     lexer.strictMode = false;
     return lexer;
 }
@@ -61,12 +61,12 @@ export function getTokens(input: String): Token[] {
 
 function createParserFromLexer(lexer) {
     const tokens = new CommonTokenStream(lexer);
-    return new GraqlParser(tokens);
+    return new TypeQLParser(tokens);
 }
 
 // function parseTree(input) {
 //     const parser = createParser(input);
-//     return parser.eof_query_list();
+//     return parser.eof_queries();
 // }
 
 export function parseTreeStr(input) {
@@ -78,18 +78,18 @@ export function parseTreeStr(input) {
     parser.removeErrorListeners();
     parser.addErrorListener(new ConsoleErrorListener());
 
-    const tree = parser.eof_query_list();
+    const tree = parser.eof_queries();
     return tree.toStringTree(parser.ruleNames);
 }
 
-class GraqlErrorStrategy extends DefaultErrorStrategy {
+class TypeQLErrorStrategy extends DefaultErrorStrategy {
     reportUnwantedToken(recognizer: Parser) {
         return super.reportUnwantedToken(recognizer);
     }
 
     singleTokenDeletion(recognizer: Parser) {
         const nextTokenType = recognizer.getTokenStream().LA(2);
-        if (recognizer.getTokenStream().LA(1) == GraqlParser.EOF) {
+        if (recognizer.getTokenStream().LA(1) == TypeQLParser.EOF) {
             return null;
         }
         const expecting = this.getExpectedTokens(recognizer);
@@ -123,8 +123,8 @@ export function validate(input): Error[] {
     const parser = createParserFromLexer(lexer);
     parser.removeErrorListeners();
     parser.addErrorListener(new CollectorErrorListener(errors));
-    parser._errHandler = new GraqlErrorStrategy();
+    parser._errHandler = new TypeQLErrorStrategy();
 
-    const tree = parser.eof_query_list();
+    const tree = parser.eof_queries();
     return errors;
 }

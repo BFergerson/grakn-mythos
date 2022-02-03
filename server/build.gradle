@@ -46,8 +46,7 @@ dependencies {
     compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.10'
     compile group: 'org.apache.commons', name: 'commons-text', version: '1.8'
     compile "org.jooq:joor-java-8:0.9.12"
-    compile "io.graql:graql-lang:1.0.6"
-    compile "io.grakn.client:grakn-client:1.7.2"
+    compile "com.vaticle.typedb:typedb-client:2.5.0"
 }
 
 compileKotlin {
